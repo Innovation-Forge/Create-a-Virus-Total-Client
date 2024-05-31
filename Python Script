@@ -1,0 +1,53 @@
+# Import necessary libraries
+import os
+import json
+import hashlib
+from virus_total_apis import PublicApi as VirusTotalPublicApi
+
+# Store your VirusTotal API key as a string variable
+API_KEY = '74d4b4786f764bc0d0ed8004fa467d826af1ec0d534285ff1d703ac2947647e3'
+
+# Define the path to the folder containing the files you want to check
+TARGET_FOLDER = 'C:\\Users\\james\\TARGET'
+
+# Define the path and name of the file where you want to save the output
+OUTPUT_FILE = 'output.txt'
+
+# Initialize the VirusTotal API client with your API key
+vt = VirusTotalPublicApi(API_KEY)
+
+# Define a function to calculate the MD5 hash of a file
+def get_md5_hash(file_path):
+    # Create a new MD5 hash object
+    hash_md5 = hashlib.md5()
+    # Open the file in binary read mode
+    with open(file_path, "rb") as f:
+        # Read the entire file
+        chunk = f.read()
+        # Update the MD5 object with the file content
+        hash_md5.update(chunk)
+    # Return the hexadecimal MD5 hash of the file
+    return hash_md5.hexdigest()
+
+# Define the main function that will run the script
+def main():
+    # Open the output file in write mode
+    with open(OUTPUT_FILE, 'w') as output_file:
+        # Loop through each file in the target folder
+        for filename in os.listdir(TARGET_FOLDER):
+            # Construct the full path of the file
+            file_path = os.path.join(TARGET_FOLDER, filename)
+            # Check if the path is a file (and not a directory)
+            if os.path.isfile(file_path):
+                # Get the MD5 hash of the file
+                file_hash = get_md5_hash(file_path)
+                # Request the file report from VirusTotal using the hash
+                response = vt.get_file_report(file_hash)
+                # Convert the response to a formatted string and write it to the output file
+                output_file.write(json.dumps(response, sort_keys=False, indent=4))
+                # Write two newline characters for readability between entries
+                output_file.write('\n\n')
+
+# Check if the script is being run directly (as opposed to being imported)
+if __name__ == "__main__":
+    main()
